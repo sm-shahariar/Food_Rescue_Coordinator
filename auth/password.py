@@ -15,12 +15,16 @@ class Password:
             600000
         ).hex()
 
-        return f"{pass_hex} ${hashed}"
+        return f"{pass_hex}${hashed}"
     
 
     @staticmethod
     def verify_pass(password, stored_pass):
-        pass_hex, original_pass = stored_pass.split("$")
+        try:
+            pass_hex, original_pass = stored_pass.split("$")
+            
+        except (ValueError, AttributeError):
+            return False
 
         new_pass = hashlib.pbkdf2_hmac(
             'sha256',
