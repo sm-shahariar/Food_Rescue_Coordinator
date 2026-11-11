@@ -1,5 +1,6 @@
 from auth.register import Registration
 from auth.login import Login
+from restaurant.donor_dashboard import DonorDashboard
 
 class FoodRescueCoordinator:
 
@@ -26,8 +27,12 @@ class FoodRescueCoordinator:
                 if user:
                     if user["role"] == "receiver":
                         print("\nWelcome to Receiver Dashboard!")
-                    elif user["role"] == "doner":
-                        print("\nWelcome to Doner Dashboard!")
+
+                    elif user["role"] == "donor":
+
+                        dashboard = DonorDashboard(user["id"])
+                        dashboard.index()
+
             elif choice == "3":
                 print("\nThank you for using Food Rescue Coordinator!")
                 break
