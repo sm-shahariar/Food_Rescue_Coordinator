@@ -12,7 +12,7 @@ class FoodDonationTable:
                 db.cmd_query("USE food_rescue")
 
                 db.cmd_query("""
-                        CREATE Table food_dinations(
+                        CREATE Table food_donations(
                             id INT AUTO_INCREMENT PRIMARY KEY,
                             resturant_id INT,
                             FOREIGN KEY (resturant_id) REFERENCES users(id),
