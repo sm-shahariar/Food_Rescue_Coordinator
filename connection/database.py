@@ -6,7 +6,7 @@ class CreateDatabase:
         db = None
 
         try:
-            db = Database.connect()
+            db = Database.connect_server()
 
             if db.is_connected():
                 db.cmd_query("CREATE DATABASE food_rescue")

@@ -10,3 +10,11 @@ class Database:
             password = "",
             database = "food_rescue"
         )
+
+    @staticmethod
+    def connect_server():
+        return mysql.connector.connect(
+            host = "localhost",
+            user = "root",
+            password = ""
+        )
