@@ -14,12 +14,12 @@ class FoodDonationTable:
                 db.cmd_query("""
                         CREATE Table food_donations(
                             id INT AUTO_INCREMENT PRIMARY KEY,
-                            resturant_id INT,
+                            resturant_id INT NOT NULL,
                             FOREIGN KEY (resturant_id) REFERENCES users(id),
                             food_name VARCHAR(80) NOT NULL,
                             quantity INT(3) NOT NULL,
                             remaining_qty INT(3) NOT NULL,
-                            status TEXT,
+                            status ENUM('available', 'unavailable') DEFAULT 'available',
                             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                         )   
                     """)
