@@ -36,7 +36,7 @@ class FoodRatingTable:
                         )
                     """)
                                 
-                print("Volunteer Request Collection Table Create Successfully!")
+                print("Food Ranting Table Create Successfully!")
                 
         except mysql.connector.Error as err:
                     print(err)
@@ -44,5 +44,5 @@ class FoodRatingTable:
         finally:
             db.close()
 
-volunteer_request_collection_table = VolunteerRequestCollectionTable()
-volunteer_request_collection_table.create_table()
+food_rating_table = FoodRatingTable()
+food_rating_table.create_table()
