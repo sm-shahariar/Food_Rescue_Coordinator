@@ -19,7 +19,7 @@ class CreateUserTable:
                         email VARCHAR(50) NOT NULL UNIQUE,
                         phone VARCHAR(15) NOT NULL UNIQUE,
                         password VARCHAR(255) NOT NULL,
-                        role ENUM('super_admin', 'donor', 'volunteer') NOT NULL DEFAULT 'valunteer',
+                        role ENUM('super_admin', 'donor', 'volunteer') NOT NULL DEFAULT 'volunteer',
                         address TEXT NOT NULL,
                         latitude DECIMAL(10, 8) DEFAULT NULL,
                         longitude DECIMAL(11, 8) DEFAULT NULL,
