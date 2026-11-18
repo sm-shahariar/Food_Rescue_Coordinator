@@ -15,7 +15,8 @@ class DonorDashboard:
             print("2. Add Food")
             print("3. Update Food")
             print("4. Delete Food")
-            print("5. Back to main menu")
+            print("5. View Collecton Request")
+            print("6. Back to main menu")
 
             choice = input("\nSelect option: ")
 
@@ -28,6 +29,8 @@ class DonorDashboard:
             elif choice == "4":
                 self.delete()
             elif choice == "5":
+                self.view_requests()
+            elif choice == "6":
                 print("\nBack to main menu...")
                 break
             else:
@@ -219,10 +222,13 @@ class DonorDashboard:
                 except ValueError:
                     print("Please enter a valid remaining quantity!")
 
-                new_status = input(f"Enter status [{status}]: ")
+                new_status = input(f"Enter status [{status}] (available/unavailable): ")
 
-                if new_status == "":
+                if new_status in ('available/unavailable') or new_status == "":
                     new_status = status
+                else:
+                    print("\nInvalid status!")
+                    return
 
                 if new_remaining > new_qty:
                     print("Reamining quantity cannot exceed total quantity!")
@@ -368,6 +374,178 @@ class DonorDashboard:
             if db and db.is_connected():
                 db.close()
 
+    
+    def view_requests(self):
+
+        db = None
+        cursor = None
+
+        try:
+            db = Database.connect()
+
+            if db.is_connected():
+                cursor = db.cursor()
+
+                query = """
+                        SELECT r.id, u.name, f.food_name, r.request_qty, r.status
+                        FROM volunteer_request_collections r 
+                        JOIN users u ON r.volunteer_id = u.id
+                        JOIN food_donations f ON r.donaton_id = f.id
+                        WHERE r.donor_id = %s ORDER BY r.id DESC
+                    """ 
+
+                cursor.execute(query, (self.resturant_id))
+                requests = cursor.fetchall()
+
+                print("\n=========================== Collection Requests ========================")
+
+                if not requests:
+                    print("\nNo Collection Request Found!")
+                    return
+
+                for request in requests:
+                    print(
+                        f"\nRequest ID: {request[0]}"
+                        f"\nVolunteer: {request[1]}"
+                        f"\nFood: {request[2]}"
+                        f"\nRequested Quantity: {request[3]}"
+                        f"\nStatus: {request[4]}"
+                    )
+                    print("-" * 55)
+
+                try:
+                    request_id = int(input("\n Enter Request ID to respond(0 to back): "))
+                except ValueError:
+                    print("\nInvalid Request ID!")
+                    return
+
+                if request_id == 0:
+                    return
+
+                self.repond_request(request_id)
+
+        except mysql.connector.Error as err:
+           print("Database err:", err)
+
+        finally:
+            if cursor:
+                cursor.close()
+
+            if db and db.is_connected():
+                db.close()
+
+
+    # Accept Or Reject Request
+
+    def respond_request(self, request_id):
+        db = None
+        cursor = None
+
+        try:
+            db = Database.connect()
+            db.start_transaction()
+            cursor = db.cursor()
+
+            query = """
+                SELECT id, donation_id, request_qty, status
+                FROM volunteer_collection_requests
+                WHERE id = %s AND donor_id = %s
+                FOR UPDATE
+            """
+
+            cursor.execute(query, (request_id, self.resturant_id))
+            request = cursor.fetchone()
+
+            if not request:
+                print("Request not found!")
+                db.rollback()
+                return
+
+            req_id, donation_id, request_qty, status = request
+
+            if status != "pending":
+                print("This request has already been processed!")
+                db.rollback()
+                return
+
+            print("\n1. Accept")
+            print("2. Reject")
+
+            choice = input("Select option: ")
+
+            if choice == "1":
+
+                food_query = """
+                    SELECT remaining_qty
+                    FROM food_donations
+                    WHERE id = %s AND resturant_id = %s
+                    FOR UPDATE
+                """
+
+                cursor.execute(
+                    food_query,
+                    (donation_id, self.resturant_id))
+
+                food = cursor.fetchone()
+
+                if not food or food[0] < request_qty:
+                    print("Not enough food available!")
+                    db.rollback()
+                    return
+
+                remaining = food[0] - request_qty
+
+                food_update = """
+                    UPDATE food_donations
+                    SET remaining_qty = %s,
+                        status = %s
+                    WHERE id = %s AND resturant_id = %s
+                """
+
+                if remaining > 0:
+                    food_status = 'available'
+                else:
+                    food_status = 'unavailable'
+
+                cursor.execute(
+                    food_update,
+                    (remaining, food_status, donation_id, self.resturant_id))
+
+                new_status = 'accepted'
+
+            elif choice == "2":
+                new_status = 'rejected'
+
+            else:
+                print("\n Invalid option!")
+                db.rollback()
+                return
+
+            
+            update_query = """
+                UPDATE volunteer_collection_requests
+                SET status = %s
+                WHERE id = %s AND donor_id = %s
+            """
+
+            cursor.execute(
+                update_query,
+                (new_status, request_id, self.resturant_id))
+
+            db.commit()
+
+        except mysql.connector.Error as err:
+            print(err)
+
+            if db:
+                db.rollback()
+
+        finally:
+            if cursor:
+                cursor.close()
+
+            if db and db.is_connected():
+                db.close()
 
 
     # _
