@@ -1,5 +1,6 @@
 from connection.config import Database
 from auth.password import Password
+from location.geocoding import Geocoding
 import mysql.connector
 
 class Registration:
@@ -21,33 +22,48 @@ class Registration:
                 phone = input("Enter phone: ")
                 address = input("Enter address: ")
 
-                print("\n1. Admin")
+                 # Get Latitude and Longitude
+                coordinates = Geocoding.get_coordinates(
+                    address + ", Bangladesh"
+                )
+
+                if not coordinates:
+                    print(
+                        "\nUnable to find your location. "
+                        "Please enter a more specific address!"
+                    )
+                    return
+
+                latitude, longitude = coordinates
+
+
+                print("\n1. Super Admin")
                 print("2. Donor")
-                print("3. Receiver")
+                print("3. Volunteer")
 
                 choice = input("Select role: ")
 
                 if choice == "1":
-                    role = "admin"
+                    role = "super_admin"
                 elif choice == "2":
                     role = "donor"
                 elif choice == "3":
-                    role = "receiver"
+                    role = "volunteer"
                 else:
                     print("This type role not exists")
 
-                if len(password) < 8:
-                    print("Password must be at least 8 characters")
+                if len(password) < 4:
+                    print("Password must be at least 4 characters")
                     return
 
                 hash_pass = Password.hash_password(password)
 
                 query = """
-                            INSERT INTO users(name, email, phone, password, address, role) VALUES 
-                            (%s, %s, %s, %s, %s, %s)
+                            INSERT INTO users(name, email, phone, password, address, longitude, latitude, role) VALUES 
+                            (%s, %s, %s, %s, %s, %s, %s, %s)
                         """
 
-                values = (name, email, phone, hash_pass, address, role)
+                values = (name, email, phone, hash_pass, address, latitude, longitude, role)
 
                 cursor.execute(query, values)
                 db.commit()
