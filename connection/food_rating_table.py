@@ -29,9 +29,6 @@ class FoodRatingTable:
                             FOREIGN KEY (donor_id)
                                 REFERENCES users(id),
 
-                            FOREIGN KEY (donation_id)
-                                REFERENCES food_donations(id),
-
                             CHECK (rating BETWEEN 1 AND 5)
                         )
                     """)
