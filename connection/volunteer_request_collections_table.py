@@ -26,21 +26,17 @@ class VolunteerRequestCollectionTable:
                                 'picked_up',
                                 'completed',
                                 'cancelled'
-                            ) DEFAULT 'pending'
+                            ) DEFAULT 'pending',
+
                             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                            FOREIGN KEY (volunteer_id)
-                                REFERENCES users(id),
 
-                            FOREIGN KEY (donor_id)
-                                REFERENCES users(id),
+                            FOREIGN KEY (volunteer_id) REFERENCES users(id),
 
-                            FOREIGN KEY (donation_id)
-                                REFERENCES food_donations(id),
-                        )
+                            FOREIGN KEY (donor_id) REFERENCES users(id))
+
                     """)
                                 
                 print("Volunteer Request Collection Table Create Successfully!")
-                
         except mysql.connector.Error as err:
                     print(err)
         
