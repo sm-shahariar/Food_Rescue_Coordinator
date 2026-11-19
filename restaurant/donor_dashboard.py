@@ -146,7 +146,7 @@ class DonorDashboard:
             if db and db.is_connected():
                 db.close()
 
-
+    # Food Update
     def update(self):
         db = None
         cursor = None
@@ -374,7 +374,7 @@ class DonorDashboard:
             if db and db.is_connected():
                 db.close()
 
-    
+    # View Request
     def view_requests(self):
 
         db = None
@@ -390,11 +390,11 @@ class DonorDashboard:
                         SELECT r.id, u.name, f.food_name, r.request_qty, r.status
                         FROM volunteer_request_collections r 
                         JOIN users u ON r.volunteer_id = u.id
-                        JOIN food_donations f ON r.donaton_id = f.id
+                        JOIN food_donations f ON r.donation_id = f.id
                         WHERE r.donor_id = %s ORDER BY r.id DESC
                     """ 
 
-                cursor.execute(query, (self.resturant_id))
+                cursor.execute(query, (self.resturant_id,))
                 requests = cursor.fetchall()
 
                 print("\n=========================== Collection Requests ========================")
@@ -414,7 +414,7 @@ class DonorDashboard:
                     print("-" * 55)
 
                 try:
-                    request_id = int(input("\n Enter Request ID to respond(0 to back): "))
+                    request_id = int(input("\nEnter Request ID to respond(0 to back): "))
                 except ValueError:
                     print("\nInvalid Request ID!")
                     return
@@ -422,7 +422,7 @@ class DonorDashboard:
                 if request_id == 0:
                     return
 
-                self.repond_request(request_id)
+                self.respond_request(request_id)
 
         except mysql.connector.Error as err:
            print("Database err:", err)
@@ -448,7 +448,7 @@ class DonorDashboard:
 
             query = """
                 SELECT id, donation_id, request_qty, status
-                FROM volunteer_collection_requests
+                FROM volunteer_request_collections
                 WHERE id = %s AND donor_id = %s
                 FOR UPDATE
             """
@@ -517,13 +517,13 @@ class DonorDashboard:
                 new_status = 'rejected'
 
             else:
-                print("\n Invalid option!")
+                print("\nInvalid option!")
                 db.rollback()
                 return
 
             
             update_query = """
-                UPDATE volunteer_collection_requests
+                UPDATE volunteer_request_collections
                 SET status = %s
                 WHERE id = %s AND donor_id = %s
             """
@@ -533,6 +533,12 @@ class DonorDashboard:
                 (new_status, request_id, self.resturant_id))
 
             db.commit()
+
+            # Message show
+            if new_status == 'accepted':
+                print("\nFood Collection Request Accepted Successfully!")
+            elif new_status == 'rejected':
+                print("\nFood Collection Request Rejected Successfully!")
 
         except mysql.connector.Error as err:
             print(err)
