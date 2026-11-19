@@ -26,8 +26,8 @@ class VolunteerDashboard:
                 self.viewFoods()
 
             elif choice == 3:
-                # self.sendRequest()
-                print("Coming soon")
+                self.sendRequest()
+                # print("Coming soon")
 
             elif choice == 4:
                 # self.viewRequest()
@@ -212,5 +212,119 @@ class VolunteerDashboard:
             if db and db.is_connected():
                 db.close()
 
+
+    # Send Collection Request
+
+    def sendRequest(self):
+        db = None
+        cursor = None
+
+        try:
+            # Nearby Available Food
+            self.viewFoods()
+
+            db = Database.connect()
+
+            print("\n========================== Send Food Request =======================")
+
+            if db.is_connected():
+                cursor = db.cursor()
+
+                try:
+                    donation_id = int(input("\nEnter Food ID: "))
+
+                    if donation_id <= 0:
+                        print("Invalid Food ID!")
+                        return
+
+                except ValueError:
+                    print("Please enter a valid food ID!")
+                    return
+
+
+                query = """
+                        SELECT id, resturant_id, food_name, quantity FROM food_donations WHERE id = %s AND
+                        status = 'available' AND remaining_qty > 0
+                    """
+
+                cursor.execute(query, (donation_id,))
+                food = cursor.fetchone()
+
+                if not food:
+                    print("\nFood not available!")
+                    return
+
+                food_id, donor_id, food_name, remaining_qty = food
+
+                print(f"Food name: {food_name}")
+                print(f"Available quantity: {remaining_qty}")
+
+                try:
+                    request_qty = int(input("\nEnter Request Quantity: "))
+
+                    if remaining_qty <= 0 or request_qty > remaining_qty:
+                        print("Invalid request quantity!")
+                        return
+                except ValueError:
+                    print("Please enter a valid quantity!")
+                    return
+
+                # Confirm the donor is within 5 KM
+                location_query = """SELECT latitude, longitude FROM users WHERE id = %s"""
+                cursor.execute(location_query, (self.volunteer_id,))
+                volunteer_location = cursor.fetchone()
+
+                donor_location_query = """SELECT latitude, longitude FROM users WHERE id = %s AND role = 'donor' """
+                cursor.execute(donor_location_query, (donor_id,))
+                donor_location = cursor.fetchone()
+
+                if not volunteer_location or not donor_location or None in volunteer_location or None in donor_location:
+                    print("Location information is incomplete!")
+                    return
+
+                lat1, lon1 = volunteer_location
+                lat2, lon2 = donor_location
+
+                distance_query = """
+                    SELECT
+                        6371 * ACOS(
+                            LEAST(1, GREATEST(-1,
+                                COS(RADIANS(%s))
+                                * COS(RADIANS(%s))
+                                * COS(RADIANS(%s) - RADIANS(%s))
+                                + SIN(RADIANS(%s))
+                                * SIN(RADIANS(%s))
+                            ))
+                        )"""
+
+                cursor.execute(distance_query, (lat1, lat2, lon2, lon1, lat1, lat2))
+                distance = cursor.fetchone()[0]
+
+                if distance > 5:
+                    print("This rasturant is outside your 5 KM radius!")
+                    return
+
+                insert_query = """INSERT INTO volunteer_request_collections 
+                    (volunteer_id, donor_id, donation_id, request_qty) VALUES(%s, %s, %s, %s)"""
+
+                values = (self.volunteer_id, donor_id, donation_id, request_qty)
+                cursor.execute(insert_query, values)
+                db.commit()
+
+                print("\nFood Collection Request Sent Successfully!")
+                print("Waiting for Donor Approval....")
+
+        except mysql.connector.Error as err:
+            print("Database error:", err)
+
+            if db:
+                db.rollback()
+
+        finally:
+            if cursor:
+                cursor.close()
+
+            if db and db.is_connected():
+                db.close()
 
     #   _ 
