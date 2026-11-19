@@ -18,6 +18,7 @@ class VolunteerRequestCollectionTable:
                             id INT AUTO_INCREMENT PRIMARY KEY ,
                             volunteer_id INT NOT NULL,
                             donor_id INT NOT NULL,
+                            donation_id INT NOT NULL,
                             request_qty INT NOT NULL, 
                             status ENUM(
                                 'pending',
@@ -32,7 +33,9 @@ class VolunteerRequestCollectionTable:
 
                             FOREIGN KEY (volunteer_id) REFERENCES users(id),
 
-                            FOREIGN KEY (donor_id) REFERENCES users(id))
+                            FOREIGN KEY (donor_id) REFERENCES users(id),
+
+                            FOREIGN KEY (donation_id) REFERENCES food_donations(id))
 
                     """)
                                 
