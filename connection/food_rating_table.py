@@ -14,7 +14,7 @@ class FoodRatingTable:
                 db.cmd_query("USE food_rescue")
 
                 db.cmd_query("""
-                        CREATE Table volunteer_request_collections(
+                        CREATE Table resturant_ratings(
                             id INT AUTO_INCREMENT PRIMARY KEY ,
                             request_id INT NOT NULL UNIQUE,
                             volunteer_id INT NOT NULL,
