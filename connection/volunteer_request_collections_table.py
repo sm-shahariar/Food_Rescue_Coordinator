@@ -26,7 +26,6 @@ class VolunteerRequestCollectionTable:
                                 'rejected',
                                 'picked_up',
                                 'completed',
-                                'cancelled'
                             ) DEFAULT 'pending',
 
                             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
